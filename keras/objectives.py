@@ -9,12 +9,16 @@ from . import initializations
 class constrained_loss(object):
     def __init__(self, loss_fn, constraint_fn, constraint_fn_args, init='zero', constraint_weight=1.0, **kwargs):
         """
-
-        :param loss_fn:
-        :param constraint_fn:
-        :param constraint_fn_args:
-        :param init:
-        :param constraint_weight:
+        constrained loss function that accepts both a loss function and a contrainst function.  For exmaple, you
+        could set the loss function to binary cross entropy and the constraint function to any custom theano
+        function e.g. constraint_fn = lambda param,val,epsilon: K.T.nlinalg.trace(K.dot(param-val,param-val)) - epsilon
+        which is equivelent to Frobenius norm computing the distance between param and val. Param could be a layer's
+        weight matrix and val could be some specific value of that weight matrix.
+        :param loss_fn: any theano/keras function computing loss between y_true and y_pred
+        :param constraint_fn: any theano/keras fuction computing some constraint
+        :param constraint_fn_args: list of args to constaint function
+        :param init: initializer for the trainable lagrange multiplier
+        :param constraint_weight: akin to a regularization parameter
         :param kwargs:
         """
         from functools import partial
