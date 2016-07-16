@@ -61,28 +61,6 @@ class constrained_loss(object):
         return constrained_loss
 
 
-#
-# class constrained_norm_loss(object):
-#     def __init__(self, loss_func, param, value, beta, epsilon):
-#
-#
-#         self.__name__ = 'constrained_norm_loss'
-#         self.loss_fn =  get(loss_func)
-#         self.param_val = K.variable(value, dtype=K._floatx, name='constrained_loss:param_value')
-#         self.param = param
-#         self.beta = K.variable(beta, name='constrained_norm:beta', dtype=K._floatx)
-#         self.epsilon = K.variable(epsilon, name='constrained_norm:epsilon', dtype=K._floatx)
-#         self.lagrange_multiplier = K.variable(0., name='constrained_norm:lagrange_mult', dtype=K._floatx)
-#         self.trainable_weights = [self.lagrange_multiplier]
-#
-#     def __call__(self, y_true, y_pred):
-#         constrained_loss = (self.loss_fn(y_true, y_pred) +
-#                             self.lagrange_multiplier * self.beta *
-#                             (K.T.nlinalg.trace(K.dot(K.transpose(self.param_val - self.param),
-#                                                      self.param_val - self.param)) - self.epsilon))
-#         return constrained_loss
-
-
 def mean_squared_error(y_true, y_pred):
     return K.mean(K.square(y_pred - y_true), axis=-1)
 
