@@ -1,17 +1,18 @@
 from __future__ import print_function
-import numpy as np
-import pytest
+
 import string
 
-from keras.utils.test_utils import get_test_data
-from keras.utils.np_utils import to_categorical
-from keras.models import Sequential
-from keras.layers import TimeDistributedDense
-from keras.layers import Dense
+import numpy as np
+
 from keras.layers import Activation
+from keras.layers import Dense
+from keras.layers import Embedding
 from keras.layers import GRU
 from keras.layers import LSTM
-from keras.layers import Embedding
+from keras.layers import TimeDistributedDense
+from keras.models import Sequential
+from keras.utils.np_utils import to_categorical
+from keras.utils.test_utils import get_test_data
 
 
 def test_temporal_classification():
@@ -144,7 +145,7 @@ def test_masked_temporal():
     subset of unmasked outputs. Each of these outputs has a 50% probability of being
     the input number unchanged, and a 50% probability of being 2*input%10.
 
-    The ground-truth best cross-entropy loss should, then be -log(0.5) = 0.69
+    The ground-truth best cross-entropy loss_fn should, then be -log(0.5) = 0.69
 
     '''
     np.random.seed(55318)

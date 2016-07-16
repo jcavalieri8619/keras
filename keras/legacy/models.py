@@ -1,10 +1,10 @@
-from collections import OrderedDict
-import warnings
 import copy
+import warnings
+from collections import OrderedDict
 
 from .. import backend as K
-from ..layers import InputLayer, Layer, Merge
 from ..engine.training import Model
+from ..layers import InputLayer, Layer, Merge
 
 
 class Graph(Model):
@@ -64,21 +64,21 @@ class Graph(Model):
         # Arguments
             optimizer: str (name of optimizer) or optimizer object.
                 See [optimizers](optimizers.md).
-            loss: dictionary mapping the name(s) of the output(s) to
-                a loss function (string name of objective function or
+            loss_fn: dictionary mapping the name(s) of the output(s) to
+                a loss_fn function (string name of objective function or
                 objective function. See [objectives](objectives.md)).
             metrics: list of str (name of metrics) or
                 list of metrics functions. See [metrics](metrics.md).
             sample_weight_modes: optional dictionary mapping certain
                 output names to a sample weight mode ("temporal" and None
                 are the only supported modes). If you need to do
-                timestep-wise loss weighting on one of your graph outputs,
+                timestep-wise loss_fn weighting on one of your graph outputs,
                 you will need to set the sample weight mode for this output
                 to "temporal".
             loss_weights: dictionary you can pass to specify a weight
-                coefficient for each loss function (in a multi-output model).
-                If no loss weight is specified for an output,
-                the weight for this output's loss will be considered to be 1.
+                coefficient for each loss_fn function (in a multi-output model).
+                If no loss_fn weight is specified for an output,
+                the weight for this output's loss_fn will be considered to be 1.
             kwargs: for Theano backend, these are passed into K.function.
                 Ignored for Tensorflow backend.
         '''
@@ -379,8 +379,8 @@ class Graph(Model):
         '''Trains the model for a fixed number of epochs.
 
         Returns a history object. Its `history` attribute is a record of
-        training loss values at successive epochs,
-        as well as validation loss values (if applicable).
+        training loss_fn values at successive epochs,
+        as well as validation loss_fn values (if applicable).
 
         # Arguments
             data: dictionary mapping input names and outputs names to
@@ -410,7 +410,7 @@ class Graph(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -439,10 +439,10 @@ class Graph(Model):
 
     def evaluate(self, data, batch_size=128,
                  verbose=0, sample_weight={}, **kwargs):
-        '''Computes the loss on some input data, batch by batch.
+        '''Computes the loss_fn on some input data, batch by batch.
 
-        Returns the scalar test loss over the data,
-        or a list of metrics values (starting with the test loss)
+        Returns the scalar test loss_fn over the data,
+        or a list of metrics values (starting with the test loss_fn)
         if applicable.
 
         Arguments: see `fit` method.
@@ -452,7 +452,7 @@ class Graph(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -482,8 +482,8 @@ class Graph(Model):
                        sample_weight={}, **kwargs):
         '''Single gradient update on a batch of samples.
 
-        Returns the scalar train loss over the data,
-        or a list of metrics values (starting with the test loss)
+        Returns the scalar train loss_fn over the data,
+        or a list of metrics values (starting with the test loss_fn)
         if applicable.
 
         Arguments: see `fit` method.
@@ -493,7 +493,7 @@ class Graph(Model):
             warnings.warn('The "accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -507,8 +507,8 @@ class Graph(Model):
     def test_on_batch(self, data, sample_weight={}, **kwargs):
         '''Test the network on a single batch of samples.
 
-        Returns the scalar test loss over the data,
-        or a list of metrics values (starting with the test loss)
+        Returns the scalar test loss_fn over the data,
+        or a list of metrics values (starting with the test loss_fn)
         if applicable.
 
         Arguments: see `fit` method.
@@ -518,7 +518,7 @@ class Graph(Model):
             warnings.warn('The "accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -597,7 +597,7 @@ class Graph(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if 'nb_worker' in kwargs:
             kwargs.pop('nb_worker')
@@ -658,8 +658,8 @@ class Graph(Model):
         return the same kind of data with every yield as accepted
         by `evaluate`.
 
-        If `show_accuracy`, it returns a tuple `(loss, accuracy)`,
-        otherwise it returns the loss value.
+        If `show_accuracy`, it returns a tuple `(loss_fn, accuracy)`,
+        otherwise it returns the loss_fn value.
 
         Arguments:
             generator:
@@ -677,7 +677,7 @@ class Graph(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if 'verbose' in kwargs:
             kwargs.pop('verbose')

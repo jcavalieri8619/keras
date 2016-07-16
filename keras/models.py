@@ -1,11 +1,11 @@
 from __future__ import print_function
-import warnings
+
 import copy
+import warnings
 
 from . import backend as K
-from .engine.training import Model
 from .engine.topology import get_source_inputs, Node
-from .legacy.models import Graph
+from .engine.training import Model
 
 
 def model_from_config(config, custom_objects={}):
@@ -324,7 +324,7 @@ class Sequential(Model):
         # Arguments
             optimizer: str (name of optimizer) or optimizer object.
                 See [optimizers](/optimizers).
-            loss: str (name of objective function) or objective function.
+            loss_fn: str (name of objective function) or objective function.
                 See [objectives](/objectives).
             metrics: list of metrics to be evaluated by the model
                 during training and testing.
@@ -341,7 +341,7 @@ class Sequential(Model):
                 model.add(Dense(32, input_shape=(500,)))
                 model.add(Dense(10, activation='softmax'))
                 model.compile(optimizer='rmsprop',
-                              loss='categorical_crossentropy',
+                              loss_fn='categorical_crossentropy',
                               metrics=['accuracy'])
             ```
         '''
@@ -387,9 +387,9 @@ class Sequential(Model):
                 'batch' is a special option for dealing with the
                 limitations of HDF5 data; it shuffles in batch-sized chunks.
             class_weight: dictionary mapping classes to a weight value,
-                used for scaling the loss function (during training only).
+                used for scaling the loss_fn function (during training only).
             sample_weight: Numpy array of weights for
-                the training samples, used for scaling the loss function
+                the training samples, used for scaling the loss_fn function
                 (during training only). You can either pass a flat (1D)
                 Numpy array with the same length as the input samples
                 (1:1 mapping between weights and samples),
@@ -401,8 +401,8 @@ class Sequential(Model):
 
         # Returns
             A `History` object. Its `History.history` attribute is
-            a record of training loss values and metrics values
-            at successive epochs, as well as validation loss values
+            a record of training loss_fn values and metrics values
+            at successive epochs, as well as validation loss_fn values
             and validation metrics values (if applicable).
         '''
         if self.model is None:
@@ -412,7 +412,7 @@ class Sequential(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -430,7 +430,7 @@ class Sequential(Model):
 
     def evaluate(self, x, y, batch_size=32, verbose=1,
                  sample_weight=None, **kwargs):
-        '''Computes the loss on some input data, batch by batch.
+        '''Computes the loss_fn on some input data, batch by batch.
 
         # Arguments
             x: input data, as a Numpy array or list of Numpy arrays
@@ -441,7 +441,7 @@ class Sequential(Model):
             sample_weight: sample weights, as a Numpy array.
 
         # Returns
-            Scalar test loss (if the model has no metrics)
+            Scalar test loss_fn (if the model has no metrics)
             or list of scalars (if the model computes other metrics).
             The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
@@ -453,7 +453,7 @@ class Sequential(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -495,11 +495,11 @@ class Sequential(Model):
                 (if the model has multiple inputs).
             y: labels, as a Numpy array.
             class_weight: dictionary mapping classes to a weight value,
-                used for scaling the loss function (during training only).
+                used for scaling the loss_fn function (during training only).
             sample_weight: sample weights, as a Numpy array.
 
         # Returns
-            Scalar training loss (if the model has no metrics)
+            Scalar training loss_fn (if the model has no metrics)
             or list of scalars (if the model computes other metrics).
             The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
@@ -511,7 +511,7 @@ class Sequential(Model):
             warnings.warn('The "accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -531,7 +531,7 @@ class Sequential(Model):
             sample_weight: sample weights, as a Numpy array.
 
         # Returns
-            Scalar test loss (if the model has no metrics)
+            Scalar test loss_fn (if the model has no metrics)
             or list of scalars (if the model computes other metrics).
             The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
@@ -543,7 +543,7 @@ class Sequential(Model):
             warnings.warn('The "accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if kwargs:
             raise Exception('Received unknown keyword arguments: ' +
@@ -661,7 +661,7 @@ class Sequential(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if 'nb_val_worker' in kwargs:
             kwargs.pop('nb_val_worker')
@@ -710,7 +710,7 @@ class Sequential(Model):
             warnings.warn('The "show_accuracy" argument is deprecated, '
                           'instead you should pass the "accuracy" metric to '
                           'the model at compile time:\n'
-                          '`model.compile(optimizer, loss, '
+                          '`model.compile(optimizer, loss_fn, '
                           'metrics=["accuracy"])`')
         if 'verbose' in kwargs:
             kwargs.pop('verbose')

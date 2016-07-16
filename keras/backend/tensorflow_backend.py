@@ -1,8 +1,10 @@
-import tensorflow as tf
-import numpy as np
-import os
 import copy
+import os
 import warnings
+
+import numpy as np
+import tensorflow as tf
+
 from .common import _FLOATX, _EPSILON, _IMAGE_DIM_ORDERING
 
 # INTERNAL UTILS
@@ -733,7 +735,7 @@ def function(inputs, outputs, updates=[], **kwargs):
 
 def gradients(loss, variables):
     '''Returns the gradients of `variables` (list of tensor variables)
-    with regard to `loss`.
+    with regard to `loss_fn`.
     '''
     return tf.gradients(loss, variables)
 

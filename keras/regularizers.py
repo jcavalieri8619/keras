@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+
 from . import backend as K
 
 
@@ -20,8 +21,8 @@ class EigenvalueRegularizer(Regularizer):
     '''This takes a constant that controls
     the regularization by Eigenvalue Decay on the
     current layer and outputs the regularized
-    loss (evaluated on the training data) and
-    the original loss (evaluated on the
+    loss_fn (evaluated on the training data) and
+    the original loss_fn (evaluated on the
     validation data).
     '''
     def __init__(self, k):

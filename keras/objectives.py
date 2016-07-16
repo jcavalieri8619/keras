@@ -1,6 +1,82 @@
 from __future__ import absolute_import
+
 import numpy as np
+
 from . import backend as K
+from . import initializations
+
+
+class constrained_loss(object):
+    def __init__(self, loss_fn, constraint_fn, constraint_fn_args, init='zero', constraint_weight=1.0, **kwargs):
+        """
+
+        :param loss_fn:
+        :param constraint_fn:
+        :param constraint_fn_args:
+        :param init:
+        :param constraint_weight:
+        :param kwargs:
+        """
+        from functools import partial
+
+        # lagrange multiplier is scalar so init function must be appropriate for scalar value
+        parameterized_inits = {'uniform', 'normal'}
+        valid_inits = {'zero', 'one', }.union(parameterized_inits)
+        assert init in valid_inits, "init must be one of {valid_inits}, but you passed {init}".format(**locals())
+
+        name = kwargs.get('name')
+        if not name:
+            prefix = self.__class__.__name__.lower()
+            name = prefix + '_' + str(K.get_uid(prefix))
+        self.__name__ = name
+
+        self.init = initializations.get(init)
+        if init in parameterized_inits:
+            # uniform and normal are parameterized by scale argument. Keras defaults scale=0.05 so I did same
+            scale = kwargs.get("init_scale", 0.05)
+            self.init = partial(self.init, scale=scale)
+
+        self.loss_fn = get(loss_fn)
+        self.constraint_fn = constraint_fn
+        self.constraint_fn_args = constraint_fn_args
+
+        self.constraint_weight = K.variable(constraint_weight,
+                                            name='{}__constraint_weight'.format(self.__class__.__name__),
+                                            dtype=K.floatx())
+
+        # fixme initializers unable to output scalar value
+        self.lagrange_multiplier = K.variable(0., dtype='float32', name='lagrange_mult')
+        # self.init((1,), name='{}__lagrange_multiplier'.format(self.__class__.__name__))
+
+        self.trainable_weights = [self.lagrange_multiplier]
+
+    def __call__(self, y_true, y_pred):
+        constrained_loss = (self.loss_fn(y_true, y_pred) +
+                            self.lagrange_multiplier *
+                            (self.constraint_weight * self.constraint_fn(*self.constraint_fn_args)))
+        return constrained_loss
+
+
+#
+# class constrained_norm_loss(object):
+#     def __init__(self, loss_func, param, value, beta, epsilon):
+#
+#
+#         self.__name__ = 'constrained_norm_loss'
+#         self.loss_fn =  get(loss_func)
+#         self.param_val = K.variable(value, dtype=K._floatx, name='constrained_loss:param_value')
+#         self.param = param
+#         self.beta = K.variable(beta, name='constrained_norm:beta', dtype=K._floatx)
+#         self.epsilon = K.variable(epsilon, name='constrained_norm:epsilon', dtype=K._floatx)
+#         self.lagrange_multiplier = K.variable(0., name='constrained_norm:lagrange_mult', dtype=K._floatx)
+#         self.trainable_weights = [self.lagrange_multiplier]
+#
+#     def __call__(self, y_true, y_pred):
+#         constrained_loss = (self.loss_fn(y_true, y_pred) +
+#                             self.lagrange_multiplier * self.beta *
+#                             (K.T.nlinalg.trace(K.dot(K.transpose(self.param_val - self.param),
+#                                                      self.param_val - self.param)) - self.epsilon))
+#         return constrained_loss
 
 
 def mean_squared_error(y_true, y_pred):
@@ -73,5 +149,7 @@ kld = KLD = kullback_leibler_divergence
 cosine = cosine_proximity
 
 from .utils.generic_utils import get_from_module
+
+
 def get(identifier):
     return get_from_module(identifier, globals(), 'objective')

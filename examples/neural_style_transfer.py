@@ -49,17 +49,19 @@ keeping the generated image close enough to the original one.
 '''
 
 from __future__ import print_function
-from scipy.misc import imread, imresize, imsave
-import numpy as np
-from scipy.optimize import fmin_l_bfgs_b
-import time
-import os
+
 import argparse
 import h5py
+import os
+import time
 
-from keras.models import Sequential
-from keras.layers import Convolution2D, ZeroPadding2D, MaxPooling2D
+import numpy as np
+from scipy.misc import imread, imresize, imsave
+from scipy.optimize import fmin_l_bfgs_b
+
 from keras import backend as K
+from keras.layers import Convolution2D, ZeroPadding2D, MaxPooling2D
+from keras.models import Sequential
 
 parser = argparse.ArgumentParser(description='Neural style transfer with Keras.')
 parser.add_argument('base_image_path', metavar='base', type=str,
@@ -75,7 +77,7 @@ style_reference_image_path = args.style_reference_image_path
 result_prefix = args.result_prefix
 weights_path = 'vgg16_weights.h5'
 
-# these are the weights of the different loss components
+# these are the weights of the different loss_fn components
 total_variation_weight = 1.
 style_weight = 1.
 content_weight = 0.025
@@ -170,7 +172,8 @@ print('Model loaded.')
 # get the symbolic outputs of each "key" layer (we gave them unique names).
 outputs_dict = dict([(layer.name, layer.output) for layer in model.layers])
 
-# compute the neural style loss
+
+# compute the neural style loss_fn
 # first we need to define 4 util functions
 
 # the gram matrix of an image tensor (feature-wise outer product)
@@ -180,7 +183,8 @@ def gram_matrix(x):
     gram = K.dot(features, K.transpose(features))
     return gram
 
-# the "style loss" is designed to maintain
+
+# the "style loss_fn" is designed to maintain
 # the style of the reference image in the generated image.
 # It is based on the gram matrices (which capture style) of
 # feature maps from the style reference image
@@ -194,13 +198,15 @@ def style_loss(style, combination):
     size = img_width * img_height
     return K.sum(K.square(S - C)) / (4. * (channels ** 2) * (size ** 2))
 
-# an auxiliary loss function
+
+# an auxiliary loss_fn function
 # designed to maintain the "content" of the
 # base image in the generated image
 def content_loss(base, combination):
     return K.sum(K.square(combination - base))
 
-# the 3rd loss function, total variation loss,
+
+# the 3rd loss_fn function, total variation loss_fn,
 # designed to keep the generated image locally coherent
 def total_variation_loss(x):
     assert K.ndim(x) == 4
@@ -208,7 +214,8 @@ def total_variation_loss(x):
     b = K.square(x[:, :, :img_width-1, :img_height-1] - x[:, :, :img_width-1, 1:])
     return K.sum(K.pow(a + b, 1.25))
 
-# combine these loss functions into a single scalar
+
+# combine these loss_fn functions into a single scalar
 loss = K.variable(0.)
 layer_features = outputs_dict['conv4_2']
 base_image_features = layer_features[0, :, :, :]
@@ -225,7 +232,7 @@ for layer_name in feature_layers:
     loss += (style_weight / len(feature_layers)) * sl
 loss += total_variation_weight * total_variation_loss(combination_image)
 
-# get the gradients of the generated image wrt the loss
+# get the gradients of the generated image wrt the loss_fn
 grads = K.gradients(loss, combination_image)
 
 outputs = [loss]
@@ -246,10 +253,10 @@ def eval_loss_and_grads(x):
     return loss_value, grad_values
 
 # this Evaluator class makes it possible
-# to compute loss and gradients in one pass
+# to compute loss_fn and gradients in one pass
 # while retrieving them via two separate functions,
-# "loss" and "grads". This is done because scipy.optimize
-# requires separate functions for loss and gradients,
+# "loss_fn" and "grads". This is done because scipy.optimize
+# requires separate functions for loss_fn and gradients,
 # but computing them separately would be inefficient.
 class Evaluator(object):
     def __init__(self):
@@ -273,14 +280,14 @@ class Evaluator(object):
 evaluator = Evaluator()
 
 # run scipy-based optimization (L-BFGS) over the pixels of the generated image
-# so as to minimize the neural style loss
+# so as to minimize the neural style loss_fn
 x = np.random.uniform(0, 255, (1, 3, img_width, img_height))
 for i in range(10):
     print('Start of iteration', i)
     start_time = time.time()
     x, min_val, info = fmin_l_bfgs_b(evaluator.loss, x.flatten(),
                                      fprime=evaluator.grads, maxfun=20)
-    print('Current loss value:', min_val)
+    print('Current loss_fn value:', min_val)
     # save current generated image
     img = deprocess_image(x.reshape((3, img_width, img_height)))
     fname = result_prefix + '_at_iteration_%d.png' % i

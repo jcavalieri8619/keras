@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import print_function
 
-import numpy as np
-
-import sys
+import copy
 import marshal
+import sys
 import types as python_types
 import warnings
-import copy
+
+import numpy as np
 from six.moves import zip
 
 from keras import backend as K
@@ -2440,7 +2440,7 @@ class Container(Layer):
 
         if hasattr(self, 'optimizer'):
             model_config['optimizer'] = self.optimizer.get_config()
-            model_config['loss'] = getattr(self.loss, '__name__', self.loss)
+            model_config['loss_fn'] = getattr(self.loss, '__name__', self.loss)
             model_config['sample_weight_mode'] = self.sample_weight_mode
 
         if hasattr(self, 'loss_weights'):

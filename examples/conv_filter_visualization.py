@@ -10,15 +10,17 @@ https://drive.google.com/file/d/0Bz7KyqmuGsilT0J5dmRCM0ROVHc/view?usp=sharing
 and make sure the variable `weights_path` in this script matches the location of the file.
 '''
 from __future__ import print_function
-from scipy.misc import imsave
-import numpy as np
-import time
-import os
-import h5py
 
-from keras.models import Sequential
-from keras.layers import Convolution2D, ZeroPadding2D, MaxPooling2D
+import h5py
+import os
+import time
+
+import numpy as np
+from scipy.misc import imsave
+
 from keras import backend as K
+from keras.layers import Convolution2D, ZeroPadding2D, MaxPooling2D
+from keras.models import Sequential
 
 # dimensions of the generated pictures for each filter.
 img_width = 128
@@ -121,18 +123,18 @@ for filter_index in range(0, 200):
     print('Processing filter %d' % filter_index)
     start_time = time.time()
 
-    # we build a loss function that maximizes the activation
+    # we build a loss_fn function that maximizes the activation
     # of the nth filter of the layer considered
     layer_output = layer_dict[layer_name].output
     loss = K.mean(layer_output[:, filter_index, :, :])
 
-    # we compute the gradient of the input picture wrt this loss
+    # we compute the gradient of the input picture wrt this loss_fn
     grads = K.gradients(loss, input_img)[0]
 
     # normalization trick: we normalize the gradient
     grads = normalize(grads)
 
-    # this function returns the loss and grads given the input picture
+    # this function returns the loss_fn and grads given the input picture
     iterate = K.function([input_img], [loss, grads])
 
     # step size for gradient ascent
@@ -146,7 +148,7 @@ for filter_index in range(0, 200):
         loss_value, grads_value = iterate([input_img_data])
         input_img_data += grads_value * step
 
-        print('Current loss value:', loss_value)
+        print('Current loss_fn value:', loss_value)
         if loss_value <= 0.:
             # some filters get stuck to 0, we can skip them
             break
@@ -161,7 +163,7 @@ for filter_index in range(0, 200):
 # we will stich the best 64 filters on a 8 x 8 grid.
 n = 8
 
-# the filters that have the highest loss are assumed to be better-looking.
+# the filters that have the highest loss_fn are assumed to be better-looking.
 # we will only keep the top 64 filters.
 kept_filters.sort(key=lambda x: x[1], reverse=True)
 kept_filters = kept_filters[:n * n]

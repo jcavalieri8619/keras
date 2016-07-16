@@ -15,17 +15,19 @@ If running on CPU, prefer the TensorFlow backend (much faster).
 Example results: http://i.imgur.com/FX6ROg9.jpg
 '''
 from __future__ import print_function
-from scipy.misc import imread, imresize, imsave
-import numpy as np
-from scipy.optimize import fmin_l_bfgs_b
-import time
+
 import argparse
 import h5py
 import os
+import time
 
-from keras.models import Sequential
-from keras.layers import Convolution2D, ZeroPadding2D, MaxPooling2D
+import numpy as np
+from scipy.misc import imread, imresize, imsave
+from scipy.optimize import fmin_l_bfgs_b
+
 from keras import backend as K
+from keras.layers import Convolution2D, ZeroPadding2D, MaxPooling2D
+from keras.models import Sequential
 
 parser = argparse.ArgumentParser(description='Deep Dreams with Keras.')
 parser.add_argument('base_image_path', metavar='base', type=str,
@@ -135,32 +137,34 @@ print('Model loaded.')
 # get the symbolic outputs of each "key" layer (we gave them unique names).
 layer_dict = dict([(layer.name, layer) for layer in model.layers])
 
-# continuity loss util function
+
+# continuity loss_fn util function
 def continuity_loss(x):
     assert K.ndim(x) == 4
     a = K.square(x[:, :, :img_width-1, :img_height-1] - x[:, :, 1:, :img_height-1])
     b = K.square(x[:, :, :img_width-1, :img_height-1] - x[:, :, :img_width-1, 1:])
     return K.sum(K.pow(a + b, 1.25))
 
-# define the loss
+
+# define the loss_fn
 loss = K.variable(0.)
 for layer_name in settings['features']:
-    # add the L2 norm of the features of a layer to the loss
+    # add the L2 norm of the features of a layer to the loss_fn
     assert layer_name in layer_dict.keys(), 'Layer ' + layer_name + ' not found in model.'
     coeff = settings['features'][layer_name]
     x = layer_dict[layer_name].output
     shape = layer_dict[layer_name].output_shape
-    # we avoid border artifacts by only involving non-border pixels in the loss
+    # we avoid border artifacts by only involving non-border pixels in the loss_fn
     loss -= coeff * K.sum(K.square(x[:, :, 2: shape[2]-2, 2: shape[3]-2])) / np.prod(shape[1:])
 
-# add continuity loss (gives image local coherence, can result in an artful blur)
+# add continuity loss_fn (gives image local coherence, can result in an artful blur)
 loss += settings['continuity'] * continuity_loss(dream) / (3 * img_width * img_height)
-# add image L2 norm to loss (prevents pixels from taking very high values, makes image darker)
+# add image L2 norm to loss_fn (prevents pixels from taking very high values, makes image darker)
 loss += settings['dream_l2'] * K.sum(K.square(dream)) / (3 * img_width * img_height)
 
-# feel free to further modify the loss as you see fit, to achieve new effects...
+# feel free to further modify the loss_fn as you see fit, to achieve new effects...
 
-# compute the gradients of the dream wrt the loss
+# compute the gradients of the dream wrt the loss_fn
 grads = K.gradients(loss, dream)
 
 outputs = [loss]
@@ -181,10 +185,10 @@ def eval_loss_and_grads(x):
     return loss_value, grad_values
 
 # this Evaluator class makes it possible
-# to compute loss and gradients in one pass
+# to compute loss_fn and gradients in one pass
 # while retrieving them via two separate functions,
-# "loss" and "grads". This is done because scipy.optimize
-# requires separate functions for loss and gradients,
+# "loss_fn" and "grads". This is done because scipy.optimize
+# requires separate functions for loss_fn and gradients,
 # but computing them separately would be inefficient.
 class Evaluator(object):
     def __init__(self):
@@ -208,7 +212,7 @@ class Evaluator(object):
 evaluator = Evaluator()
 
 # run scipy-based optimization (L-BFGS) over the pixels of the generated image
-# so as to minimize the loss
+# so as to minimize the loss_fn
 x = preprocess_image(base_image_path)
 for i in range(5):
     print('Start of iteration', i)
@@ -221,7 +225,7 @@ for i in range(5):
     # run L-BFGS for 7 steps
     x, min_val, info = fmin_l_bfgs_b(evaluator.loss, x.flatten(),
                                      fprime=evaluator.grads, maxfun=7)
-    print('Current loss value:', min_val)
+    print('Current loss_fn value:', min_val)
     # decode the dream and save it
     x = x.reshape((3, img_width, img_height))
     x -= random_jitter

@@ -57,11 +57,13 @@ This becomes especially obvious on QA2 and QA3, both far longer than QA1.
 '''
 
 from __future__ import print_function
-from functools import reduce
+
 import re
 import tarfile
+from functools import reduce
 
 import numpy as np
+
 np.random.seed(1337)  # for reproducibility
 
 from keras.utils.data_utils import get_file
@@ -208,4 +210,4 @@ model.compile(optimizer='adam',
 print('Training')
 model.fit([X, Xq], Y, batch_size=BATCH_SIZE, nb_epoch=EPOCHS, validation_split=0.05)
 loss, acc = model.evaluate([tX, tXq], tY, batch_size=BATCH_SIZE)
-print('Test loss / test accuracy = {:.4f} / {:.4f}'.format(loss, acc))
+print('Test loss_fn / test accuracy = {:.4f} / {:.4f}'.format(loss, acc))

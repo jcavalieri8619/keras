@@ -16,14 +16,15 @@ Note that the relative performance of the different `consume_less` modes
 can vary depending on your device, your model and the size of your data.
 '''
 
-import time
-import numpy as np
 import matplotlib.pyplot as plt
+import time
 
-from keras.preprocessing import sequence
-from keras.models import Sequential
-from keras.layers import Embedding, Dense, LSTM
+import numpy as np
+
 from keras.datasets import imdb
+from keras.layers import Embedding, Dense, LSTM
+from keras.models import Sequential
+from keras.preprocessing import sequence
 
 max_features = 20000
 max_length = 80
@@ -59,7 +60,7 @@ for mode in modes:
 
     results.append((history, average_time_per_epoch))
 
-# Compare models' accuracy, loss and elapsed time per epoch.
+# Compare models' accuracy, loss_fn and elapsed time per epoch.
 plt.style.use('ggplot')
 ax1 = plt.subplot2grid((2, 2), (0, 0))
 ax1.set_title('Accuracy')

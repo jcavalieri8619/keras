@@ -1,14 +1,15 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import numpy as np
-import time
 import json
+import time
 import warnings
-
 from collections import deque
-from .utils.generic_utils import Progbar
+
+import numpy as np
+
 from keras import backend as K
+from .utils.generic_utils import Progbar
 
 
 class CallbackList(object):
@@ -45,7 +46,7 @@ class CallbackList(object):
         self._delta_ts_batch_begin.append(time.time() - t_before_callbacks)
         delta_t_median = np.median(self._delta_ts_batch_begin)
         if self._delta_t_batch > 0. and delta_t_median > 0.95 * \
-           self._delta_t_batch and delta_t_median > 0.1:
+                self._delta_t_batch and delta_t_median > 0.1:
             warnings.warn('Method on_batch_begin() is slow compared '
                           'to the batch update (%f). Check your callbacks.'
                           % delta_t_median)
@@ -91,15 +92,16 @@ class Callback(object):
     will include the following quantities in the `logs` that
     it passes to its callbacks:
 
-        on_epoch_end: logs include `acc` and `loss`, and
+        on_epoch_end: logs include `acc` and `loss_fn`, and
             optionally include `val_loss`
             (if validation is enabled in `fit`), and `val_acc`
             (if validation and accuracy monitoring are enabled).
         on_batch_begin: logs include `size`,
             the number of samples in the current batch.
-        on_batch_end: logs include `loss`, and optionally `acc`
+        on_batch_end: logs include `loss_fn`, and optionally `acc`
             (if accuracy monitoring is enabled).
     '''
+
     def __init__(self):
         pass
 
@@ -135,6 +137,7 @@ class BaseLogger(Callback):
     This callback is automatically applied to
     every Keras model.
     '''
+
     def on_epoch_begin(self, epoch, logs={}):
         self.seen = 0
         self.totals = {}
@@ -159,6 +162,7 @@ class BaseLogger(Callback):
 class ProgbarLogger(Callback):
     '''Callback that prints metrics to stdout.
     '''
+
     def on_train_begin(self, logs={}):
         self.verbose = self.params['verbose']
         self.nb_epoch = self.params['nb_epoch']
@@ -203,6 +207,7 @@ class History(Callback):
     every Keras model. The `History` object
     gets returned by the `fit` method of models.
     '''
+
     def on_train_begin(self, logs={}):
         self.epoch = []
         self.history = {}
@@ -211,6 +216,7 @@ class History(Callback):
         self.epoch.append(epoch)
         for k, v in logs.items():
             self.history.setdefault(k, []).append(v)
+
 
 class ModelCheckpoint(Callback):
     '''Save the model after every epoch.
@@ -221,7 +227,7 @@ class ModelCheckpoint(Callback):
 
     For example: if `filepath` is `weights.{epoch:02d}-{val_loss:.2f}.hdf5`,
     then multiple files will be save with the epoch number and
-    the validation loss.
+    the validation loss_fn.
 
     # Arguments
         filepath: string, path to save the model file.
@@ -229,7 +235,7 @@ class ModelCheckpoint(Callback):
         verbose: verbosity mode, 0 or 1.
         save_best_only: if `save_best_only=True`,
             the latest best model according to
-            the validation loss will not be overwritten.
+            the validation loss_fn will not be overwritten.
         mode: one of {auto, min, max}.
             If `save_best_only=True`, the decision
             to overwrite the current save file is made
@@ -240,6 +246,7 @@ class ModelCheckpoint(Callback):
             automatically inferred from the name of the monitored quantity.
 
     '''
+
     def __init__(self, filepath, monitor='val_loss', verbose=0,
                  save_best_only=False, mode='auto'):
 
@@ -309,6 +316,7 @@ class EarlyStopping(Callback):
             mode it will stop when the quantity
             monitored has stopped increasing.
     '''
+
     def __init__(self, monitor='val_loss', patience=0, verbose=0, mode='auto'):
         super(EarlyStopping, self).__init__()
 
@@ -333,7 +341,7 @@ class EarlyStopping(Callback):
                 self.monitor_op = np.less
 
     def on_train_begin(self, logs={}):
-        self.wait = 0       # Allow instances to be re-used
+        self.wait = 0  # Allow instances to be re-used
         self.best = np.Inf if self.monitor_op == np.less else -np.Inf
 
     def on_epoch_end(self, epoch, logs={}):
@@ -361,8 +369,8 @@ class RemoteMonitor(Callback):
     # Arguments
         root: root url to which the events will be sent (at the end
             of every epoch). Events are sent to
-            `root + '/publish/epoch/end/'` by default. Calls are 
-            HTTP POST, with a `data` argument which is a 
+            `root + '/publish/epoch/end/'` by default. Calls are
+            HTTP POST, with a `data` argument which is a
             JSON-encoded dictionary of event data.
     '''
 
@@ -397,6 +405,7 @@ class LearningRateScheduler(Callback):
             (integer, indexed from 0) and returns a new
             learning rate as output (float).
     '''
+
     def __init__(self, schedule):
         super(LearningRateScheduler, self).__init__()
         self.schedule = schedule

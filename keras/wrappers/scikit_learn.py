@@ -1,11 +1,13 @@
 from __future__ import absolute_import
+
 import copy
 import inspect
 import types
+
 import numpy as np
 
-from ..utils.np_utils import to_categorical
 from ..models import Sequential
+from ..utils.np_utils import to_categorical
 
 
 class BaseWrapper(object):
@@ -266,7 +268,7 @@ class KerasRegressor(BaseWrapper):
         return self.model.predict(X, **kwargs)
 
     def score(self, X, y, **kwargs):
-        '''Returns the mean loss on the given test data and labels.
+        '''Returns the mean loss_fn on the given test data and labels.
 
         # Arguments
             X: array-like, shape `(n_samples, n_features)`

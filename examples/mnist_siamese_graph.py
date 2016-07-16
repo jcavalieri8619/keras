@@ -12,14 +12,16 @@ Gets to 99.5% test accuracy after 20 epochs.
 '''
 from __future__ import absolute_import
 from __future__ import print_function
+
 import numpy as np
+
 np.random.seed(1337)  # for reproducibility
 
 import random
 from keras.datasets import mnist
 from keras.models import Sequential, Model
 from keras.layers import Dense, Dropout, Input, Lambda
-from keras.optimizers import SGD, RMSprop
+from keras.optimizers import RMSprop
 from keras import backend as K
 
 
@@ -34,7 +36,7 @@ def eucl_dist_output_shape(shapes):
 
 
 def contrastive_loss(y_true, y_pred):
-    '''Contrastive loss from Hadsell-et-al.'06
+    '''Contrastive loss_fn from Hadsell-et-al.'06
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
     '''
     margin = 1

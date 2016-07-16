@@ -1,13 +1,15 @@
 from __future__ import absolute_import
 from __future__ import print_function
-import pytest
+
 import os
+
 import numpy as np
+import pytest
+
 np.random.seed(1337)
 
-from keras import backend as K
 from keras.models import Graph, Sequential
-from keras.layers.core import Dense, Activation, Merge, Lambda
+from keras.layers.core import Dense, Activation
 from keras.utils.test_utils import get_test_data
 from keras.models import model_from_json, model_from_yaml
 
@@ -253,13 +255,13 @@ since the Graph model is deprecated.
 #     assert(type(out == dict))
 #     assert(len(out) == 1)
 
-#     loss = graph.test_on_batch({'input1': X_test_graph,
+#     loss_fn = graph.test_on_batch({'input1': X_test_graph,
 #                                 'input2': X2_test_graph,
 #                                 'output1': y_test_graph})
-#     loss = graph.train_on_batch({'input1': X_test_graph,
+#     loss_fn = graph.train_on_batch({'input1': X_test_graph,
 #                                  'input2': X2_test_graph,
 #                                  'output1': y_test_graph})
-#     loss = graph.evaluate({'input1': X_test_graph,
+#     loss_fn = graph.evaluate({'input1': X_test_graph,
 #                            'input2': X2_test_graph,
 #                            'output1': y_test_graph})
 #     # test serialization
@@ -314,7 +316,7 @@ def test_2o_1i_save_weights():
     nloss = graph.evaluate({'input1': X_test_graph, 'output1': y_test_graph, 'output2': y2_test_graph})
     assert(loss == nloss)
 
-    # test loss weights
+    # test loss_fn weights
     graph.compile('rmsprop', {'output1': 'mse', 'output2': 'mse'},
                   loss_weights={'output1': 1., 'output2': 2.})
     graph.fit({'input1': X_train_graph, 'output1': y_train_graph, 'output2': y2_train_graph},

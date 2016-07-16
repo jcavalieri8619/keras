@@ -1,12 +1,14 @@
-from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import print_function
 
-import warnings
 import copy
-import time
-import numpy as np
 import multiprocessing
 import threading
+import time
+import warnings
+
+import numpy as np
+
 try:
     import queue
 except ImportError:
@@ -125,8 +127,8 @@ def standardize_sample_or_class_weights(x_weight, output_names, weight_type):
                             str(len(x_weight)) +
                             ' elements, but the model has ' +
                             str(len(output_names)) + ' outputs. '
-                            'You should provide one `' + weight_type + '`'
-                            'array per model output.')
+                                                     'You should provide one `' + weight_type + '`'
+                                                                                                'array per model output.')
         return x_weight
     if type(x_weight) is dict:
         x_weights = []
@@ -136,8 +138,8 @@ def standardize_sample_or_class_weights(x_weight, output_names, weight_type):
     else:
         raise Exception('The model has multiple outputs, so `' +
                         weight_type + '` '
-                        'should be either a list of a dict. '
-                        'Provided `' + weight_type +
+                                      'should be either a list of a dict. '
+                                      'Provided `' + weight_type +
                         '` type not understood: ' +
                         str(x_weight))
 
@@ -191,7 +193,7 @@ def check_loss_and_target_compatibility(targets, losses, output_shapes):
         if loss.__name__ == 'categorical_crossentropy':
             if y.shape[1] == 1:
                 raise Exception('You are passing a target array of shape ' + str(y.shape) +
-                                ' while using as loss `categorical_crossentropy`. '
+                                ' while using as loss_fn `categorical_crossentropy`. '
                                 '`categorical_crossentropy` expects '
                                 'targets to be binary matrices (1s and 0s) '
                                 'of shape (samples, classes). '
@@ -202,16 +204,16 @@ def check_loss_and_target_compatibility(targets, losses, output_shapes):
                                 'y_binary = to_categorical(y_int)\n'
                                 '```\n'
                                 '\n'
-                                'Alternatively, you can use the loss function '
+                                'Alternatively, you can use the loss_fn function '
                                 '`sparse_categorical_crossentropy` instead, '
                                 'which does expect integer targets.')
         if loss.__name__ in key_losses and shape[1] is not None and y.shape[1] != shape[1]:
             raise Exception('A target array with shape ' + str(y.shape) +
                             ' was passed for an output of shape ' + str(shape) +
-                            ' while using as loss `' + loss.__name__ + '`. '
-                            'This loss expects '
-                            'targets to have the same shape '
-                            'as the output.')
+                            ' while using as loss_fn `' + loss.__name__ + '`. '
+                                                                          'This loss_fn expects '
+                                                                          'targets to have the same shape '
+                                                                          'as the output.')
 
 
 def collect_metrics(metrics, output_names):
@@ -243,9 +245,17 @@ def collect_trainable_weights(layer):
         return []
     weights = []
     if layer.__class__.__name__ == 'Sequential':
+        if hasattr(layer, 'loss_functions'):
+            for loss_fn in layer.loss_functions:
+                if hasattr(loss_fn, 'trainable_weights'):
+                    weights += loss_fn.trainable_weights
         for sublayer in layer.flattened_layers:
             weights += collect_trainable_weights(sublayer)
     elif layer.__class__.__name__ == 'Model':
+        if hasattr(layer, 'loss_functions'):
+            for loss_fn in layer.loss_functions:
+                if hasattr(loss_fn, 'trainable_weights'):
+                    weights += loss_fn.trainable_weights
         for sublayer in layer.layers:
             weights += collect_trainable_weights(sublayer)
     elif layer.__class__.__name__ == 'Graph':
@@ -319,6 +329,7 @@ def weighted_objective(fn):
     into a sample-weighted, cost-masked objective function
     `fn(y_true, y_pred, weights, mask)`.
     '''
+
     def weighted(y_true, y_pred, weights, mask=None):
         # score_array has ndim >= 2
         score_array = fn(y_true, y_pred)
@@ -327,7 +338,7 @@ def weighted_objective(fn):
             mask = K.cast(mask, K.floatx())
             # mask should have the same shape as score_array
             score_array *= mask
-            #  the loss per batch should be proportional
+            #  the loss_fn per batch should be proportional
             #  to the number of unmasked samples.
             score_array /= K.mean(mask)
 
@@ -341,6 +352,7 @@ def weighted_objective(fn):
             score_array *= weights
             score_array /= K.mean(K.cast(K.not_equal(weights, 0), K.floatx()))
         return K.mean(score_array)
+
     return weighted
 
 
@@ -358,24 +370,24 @@ def standardize_weights(y, sample_weight=None, class_weight=None,
             raise Exception('Found a sample_weight array for '
                             'an input with shape ' +
                             str(y.shape) + '. '
-                            'Timestep-wise sample weighting (use of '
-                            'sample_weight_mode="temporal") is restricted to '
-                            'outputs that are at least 3D, i.e. that have '
-                            'a time dimension.')
+                                           'Timestep-wise sample weighting (use of '
+                                           'sample_weight_mode="temporal") is restricted to '
+                                           'outputs that are at least 3D, i.e. that have '
+                                           'a time dimension.')
         if sample_weight is not None and len(sample_weight.shape) != 2:
             raise Exception('Found a sample_weight array with shape ' +
                             str(sample_weight.shape) + '. '
-                            'In order to use timestep-wise sample weighting, '
-                            'you should pass a 2D sample_weight array.')
+                                                       'In order to use timestep-wise sample weighting, '
+                                                       'you should pass a 2D sample_weight array.')
     else:
         if sample_weight is not None and len(sample_weight.shape) != 1:
             raise Exception('Found a sample_weight array with shape ' +
                             str(sample_weight.shape) + '. '
-                            'In order to use timestep-wise sample weights, '
-                            'you should specify sample_weight_mode="temporal" '
-                            'in compile(). If you just mean to use '
-                            'sample-wise weights, make sure your '
-                            'sample_weight array is 1D.')
+                                                       'In order to use timestep-wise sample weights, '
+                                                       'you should specify sample_weight_mode="temporal" '
+                                                       'in compile(). If you just mean to use '
+                                                       'sample-wise weights, make sure your '
+                                                       'sample_weight array is 1D.')
 
     if sample_weight is not None:
         assert len(sample_weight.shape) <= len(y.shape)
@@ -459,7 +471,6 @@ def generator_queue(generator, max_q_size=10,
 
 
 class Model(Container):
-
     def compile(self, optimizer, loss, metrics=[], loss_weights=None,
                 sample_weight_mode=None, **kwargs):
         '''Configures the model for training.
@@ -467,9 +478,9 @@ class Model(Container):
         # Arguments
             optimizer: str (name of optimizer) or optimizer object.
                 See [optimizers](/optimizers).
-            loss: str (name of objective function) or objective function.
+            loss_fn: str (name of objective function) or objective function.
                 See [objectives](/objectives).
-                If the model has multiple outputs, you can use a different loss
+                If the model has multiple outputs, you can use a different loss_fn
                 on each output by passing a dictionary or a list of objectives.
             metrics: list of metrics to be evaluated by the model
                 during training and testing.
@@ -491,7 +502,7 @@ class Model(Container):
         self.loss = loss
         self.loss_weights = loss_weights
 
-        # prepare loss weights
+        # prepare loss_fn weights
         if loss_weights is None:
             loss_weights_list = [1. for _ in range(len(self.outputs))]
         elif type(loss_weights) is dict:
@@ -499,7 +510,7 @@ class Model(Container):
                 if name not in self.output_names:
                     raise Exception('Unknown entry in loss_weights '
                                     'dictionary: "' + name + '". '
-                                    'Only expected the following keys: ' +
+                                                             'Only expected the following keys: ' +
                                     str(self.output_names))
             loss_weights_list = []
             for name in self.output_names:
@@ -516,26 +527,26 @@ class Model(Container):
             raise Exception('Could not interpret loss_weights argument: ' +
                             str(loss_weights))
 
-        # prepare loss functions
+        # prepare loss_fn functions
         if type(loss) is dict:
             for name in loss:
                 if name not in self.output_names:
-                    raise Exception('Unknown entry in loss '
+                    raise Exception('Unknown entry in loss_fn '
                                     'dictionary: "' + name + '". '
-                                    'Only expected the following keys: ' +
+                                                             'Only expected the following keys: ' +
                                     str(self.output_names))
             loss_functions = []
             for name in self.output_names:
                 if name not in loss:
                     raise Exception('Output "' + name +
-                                    '" missing from loss dictionary')
+                                    '" missing from loss_fn dictionary')
                 loss_functions.append(objectives.get(loss[name]))
         elif type(loss) is list:
             if len(loss) != len(self.outputs):
-                raise Exception('When passing a list as loss, '
+                raise Exception('When passing a list as loss_fn, '
                                 'it should have one entry per model outputs. '
                                 'The model has ' + str(len(self.outputs)) +
-                                ' outputs, but you passed loss=' +
+                                ' outputs, but you passed loss_fn=' +
                                 str(loss))
             loss_functions = [objectives.get(l) for l in loss]
         else:
@@ -558,7 +569,7 @@ class Model(Container):
                     raise Exception('Unknown entry in '
                                     'sample_weight_mode dictionary: "' +
                                     name + '". '
-                                    'Only expected the following keys: ' +
+                                           'Only expected the following keys: ' +
                                     str(self.output_names))
             sample_weights = []
             sample_weight_modes = []
@@ -610,10 +621,10 @@ class Model(Container):
             self.targets.append(K.placeholder(ndim=len(shape), name=name + '_target'))
 
         # prepare metrics
-        self.metrics_names = ['loss']
+        self.metrics_names = ['loss_fn']
         self.metrics = []
 
-        # compute total loss
+        # compute total loss_fn
         total_loss = None
         for i in range(len(self.outputs)):
             y_true = self.targets[i]
@@ -632,7 +643,7 @@ class Model(Container):
             else:
                 total_loss += loss_weight * output_loss
 
-        # add regularization penalties to the loss
+        # add regularization penalties to the loss_fn
         for r in self.regularizers:
             total_loss = r(total_loss)
 
@@ -698,7 +709,7 @@ class Model(Container):
             training_updates = self.optimizer.get_updates(trainable_weights, self.constraints, self.total_loss)
             updates = self.updates + training_updates
 
-            # returns loss and metrics. Updates weights at each call.
+            # returns loss_fn and metrics. Updates weights at each call.
             self.train_function = K.function(inputs,
                                              [self.total_loss] + self.metrics,
                                              updates=updates,
@@ -712,7 +723,7 @@ class Model(Container):
                 inputs = self.inputs + self.targets + self.sample_weights + [K.learning_phase()]
             else:
                 inputs = self.inputs + self.targets + self.sample_weights
-            # return loss and metrics, no gradient updates.
+            # return loss_fn and metrics, no gradient updates.
             # Does update the network states.
             self.test_function = K.function(inputs,
                                             [self.total_loss] + self.metrics,
@@ -903,7 +914,7 @@ class Model(Container):
             verbose: verbosity mode.
 
         # Returns
-            Scalar loss (if the model has a single output and no metrics)
+            Scalar loss_fn (if the model has a single output and no metrics)
             or list of scalars (if the model has multiple outputs
             and/or metrics). The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
@@ -947,7 +958,7 @@ class Model(Container):
                                check_batch_dim=True, batch_size=None):
         if not hasattr(self, 'optimizer'):
             raise Exception('You must compile a model before training/testing.'
-                            ' Use `model.compile(optimizer, loss)`.')
+                            ' Use `model.compile(optimizer, loss_fn)`.')
 
         output_shapes = []
         for output_shape, loss_fn in zip(self.internal_output_shapes, self.loss_functions):
@@ -1005,19 +1016,19 @@ class Model(Container):
             validation_split: float between 0 and 1:
                 fraction of the training data to be used as validation data.
                 The model will set apart this fraction of the training data,
-                will not train on it, and will evaluate the loss and any model metrics
+                will not train on it, and will evaluate the loss_fn and any model metrics
                 on this data at the end of each epoch.
-            validation_data: data on which to evaluate the loss and any model metrics
+            validation_data: data on which to evaluate the loss_fn and any model metrics
                 at the end of each epoch. The model will not be trained on this data.
                 This could be a tuple (x_val, y_val) or a tuple (val_x, val_y, val_sample_weights).
             shuffle: boolean, whether to shuffle the training data before each epoch.
             class_weight: optional dictionary mapping class indices (integers) to
-                a weight (float) to apply to the model's loss for the samples
+                a weight (float) to apply to the model's loss_fn for the samples
                 from this class during training.
                 This can be useful to tell the model to "pay more attention" to
                 samples from an under-represented class.
             sample_weight: optional array of the same length as x, containing
-                weights to apply to the model's loss for each sample.
+                weights to apply to the model's loss_fn for each sample.
                 In the case of temporal data, you can pass a 2D array
                 with shape (samples, sequence_length),
                 to apply a different weight to every timestep of every sample.
@@ -1108,7 +1119,7 @@ class Model(Container):
                               callback_metrics=callback_metrics)
 
     def evaluate(self, x, y, batch_size=32, verbose=1, sample_weight=None):
-        '''Returns the loss value and metrics values for the model
+        '''Returns the loss_fn value and metrics values for the model
         in test mode. Computation is done in batches.
 
         # Arguments
@@ -1123,7 +1134,7 @@ class Model(Container):
             batch_size: integer. Number of samples per gradient update.
 
         # Returns
-            Scalar test loss (if the model has a single output and no metrics)
+            Scalar test loss_fn (if the model has a single output and no metrics)
             or list of scalars (if the model has multiple outputs
             and/or metrics). The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
@@ -1168,7 +1179,7 @@ class Model(Container):
                                 'a number of samples that can be '
                                 'divided by the batch size. Found: ' +
                                 str(x[0].shape[0]) + ' samples. '
-                                'Batch size: ' + str(batch_size) + '.')
+                                                     'Batch size: ' + str(batch_size) + '.')
 
         # prepare inputs, delegate logic to _predict_loop
         if self.uses_learning_phase:
@@ -1194,19 +1205,19 @@ class Model(Container):
                 If all outputs in the model are named, you can also pass a dictionary
                 mapping output names to Numpy arrays.
             sample_weight: optional array of the same length as x, containing
-                weights to apply to the model's loss for each sample.
+                weights to apply to the model's loss_fn for each sample.
                 In the case of temporal data, you can pass a 2D array
                 with shape (samples, sequence_length),
                 to apply a different weight to every timestep of every sample.
                 In this case you should make sure to specify sample_weight_mode="temporal" in compile().
             class_weight: optional dictionary mapping class indices (integers) to
-                a weight (float) to apply to the model's loss for the samples
+                a weight (float) to apply to the model's loss_fn for the samples
                 from this class during training.
                 This can be useful to tell the model to "pay more attention" to
                 samples from an under-represented class.
 
         # Returns
-            Scalar training loss (if the model has a single output and no metrics)
+            Scalar training loss_fn (if the model has a single output and no metrics)
             or list of scalars (if the model has multiple outputs
             and/or metrics). The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
@@ -1238,14 +1249,14 @@ class Model(Container):
                 If all outputs in the model are named, you can also pass a dictionary
                 mapping output names to Numpy arrays.
             sample_weight: optional array of the same length as x, containing
-                weights to apply to the model's loss for each sample.
+                weights to apply to the model's loss_fn for each sample.
                 In the case of temporal data, you can pass a 2D array
                 with shape (samples, sequence_length),
                 to apply a different weight to every timestep of every sample.
                 In this case you should make sure to specify sample_weight_mode="temporal" in compile().
 
         # Returns
-            Scalar test loss (if the model has a single output and no metrics)
+            Scalar test loss_fn (if the model has a single output and no metrics)
             or list of scalars (if the model has multiple outputs
             and/or metrics). The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
@@ -1513,7 +1524,7 @@ class Model(Container):
                 easily to children processes.
 
         # Returns
-            Scalar test loss (if the model has a single output and no metrics)
+            Scalar test loss_fn (if the model has a single output and no metrics)
             or list of scalars (if the model has multiple outputs
             and/or metrics). The attribute `model.metrics_names` will give you
             the display labels for the scalar outputs.
