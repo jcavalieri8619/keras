@@ -54,14 +54,12 @@ class constrained_loss(object):
         self.lagrange_multiplier = K.variable(init_val.get_value()[0], dtype=K.floatx(),
                                               name='{}__lagrange_multiplier'.format(self.__class__.__name__))
 
-
         self.trainable_weights = [self.lagrange_multiplier]
 
     def __call__(self, y_true, y_pred):
-        constrained_loss = (self.loss_fn(y_true, y_pred) +
-                            self.lagrange_multiplier *
-                            (self.constraint_weight * self.constraint_fn(*self.constraint_fn_args)))
-        return constrained_loss
+        return (self.loss_fn(y_true, y_pred) +
+                self.lagrange_multiplier *
+                (self.constraint_weight * self.constraint_fn(*self.constraint_fn_args)))
 
 
 def mean_squared_error(y_true, y_pred):
