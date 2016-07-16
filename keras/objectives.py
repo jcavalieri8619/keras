@@ -19,7 +19,7 @@ class constrained_loss(object):
         :param constraint_fn_args: list of args to constaint function
         :param init: initializer for the trainable lagrange multiplier
         :param constraint_weight: akin to a regularization parameter
-        :param kwargs:
+        :param kwargs: name
         """
         from functools import partial
 
