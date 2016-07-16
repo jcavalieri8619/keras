@@ -48,9 +48,12 @@ class constrained_loss(object):
                                             name='{}__constraint_weight'.format(self.__class__.__name__),
                                             dtype=K.floatx())
 
-        # fixme initializers unable to output scalar value
-        self.lagrange_multiplier = K.variable(0., dtype='float32', name='lagrange_mult')
-        # self.init((1,), name='{}__lagrange_multiplier'.format(self.__class__.__name__))
+        # fixme initializers apparently unable to output scalar value
+        init_val = self.init((1,), )
+        # init_val is shared theano array with 1 element--use that value to initialize lagrange multiplier
+        self.lagrange_multiplier = K.variable(init_val.get_value()[0], dtype=K.floatx(),
+                                              name='{}__lagrange_multiplier'.format(self.__class__.__name__))
+
 
         self.trainable_weights = [self.lagrange_multiplier]
 
